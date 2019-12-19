@@ -1,26 +1,32 @@
-import React from 'react';
+import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import 'materialize-css/dist/css/materialize.min.css';
+import { Link } from 'react-router-dom';
+import Menu from "./ui/Menu.js";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+// Import Materialize
+import M from "materialize-css";
+
+export default class App extends Component {
+  componentDidMount() {
+    // Auto initialize all the things!
+    M.AutoInit();
+    let dropdowns = document.querySelectorAll('.dropdown-trigger');
+    let options = {
+      constrainWidth: false,
+      coverTrigger: false
+    };
+    M.Dropdown.init(dropdowns, options);
+  }
+  render() {
+    return (
+      <div>
+      <Menu />
+      <div class="row center-align">
+      <h1>LolFig v0</h1>
+      </div>
+      </div>
+    );
+  }
 }
-
-export default App;

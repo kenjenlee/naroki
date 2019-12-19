@@ -1,0 +1,44 @@
+.param-view {
+  height: 60vh;
+  /* background-color: firebrick; */
+}
+
+.param-chart {
+  height: 100%;
+  background-color: black;
+  display: flex;
+  overflow-x: auto;
+  /* Internet Explorer 10+ */
+  /* -ms-overflow-style: none; */
+  /* Firefox */ 
+  /* scrollbar-width: none;  */
+}
+
+.card--content {
+  background-color: #e74c3c;
+  min-width: 200px;
+  margin: 3px;
+}
+
+.param-chart::-webkit-scrollbar {
+  display: none;
+}
+
+.test {
+  background-color: white;
+}
+
+.checkbox-orange[type="checkbox"].filled-in:checked + span:not(.lever):after {
+  border: 2px solid #ff9800;
+  background-color: #ff9800;
+}
+
+.checkbox-purple[type="checkbox"].filled-in:checked + span:not(.lever):after {
+  border: 2px solid purple;
+  background-color: purple;
+}
+
+.checkbox-green[type="checkbox"].filled-in:checked + span:not(.lever):after {
+  border: 2px solid green;
+  background-color: green;
+}
