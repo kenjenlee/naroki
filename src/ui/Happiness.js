@@ -1,11 +1,13 @@
 import React, {Component, useRef} from 'react';
+import axios from 'axios';
 import { Resizable, ResizableBox } from 'react-resizable';
 // Import Materialize
 import M from "materialize-css";
 import Menu from './Menu.js';
 import 'materialize-css/dist/css/materialize.min.css';
 import './Happiness.css';
-import BoundedDraggable from './BoundedDraggable.js'
+import BoundedDraggable from './BoundedDraggable.js';
+import * as NaoConsts from '../NaoConst.js';
 
 export default class Happiness extends Component {
 
@@ -14,10 +16,14 @@ export default class Happiness extends Component {
       this.state = {
         paramViewSelected: {pitch: false, speed: false, pauses: false},
         numWords: 0,
-        words: ''
+        words: '',
+        pitches: '',
       };
       this.handleCheckboxChange = this.handleCheckboxChange.bind(this);
       this.handleTextAreaChange = this.handleTextAreaChange.bind(this);
+      this.handleGoButtonClick = this.handleGoButtonClick.bind(this);
+      this.handleWordParamChange = this.handleWordParamChange.bind(this);
+      this.createParamViewPanels = this.createParamViewPanels.bind(this);
     }
 
     handleCheckboxChange(event) {
@@ -29,13 +35,46 @@ export default class Happiness extends Component {
       // console.log(this.state.paramViewSelected);
     }
 
+    formSpeechString() {
+      var speech = '';
+      for (let i=0; i<this.state.numWords; i++) {
+        speech = speech.concat(' \\vct=' + this.state.pitches[i] + '\\' + this.state.words[i]);
+      }
+      return speech;
+    }
+
     handleTextAreaChange(event) {
       // console.log(event.target.value);
       var temp = event.target.value.trim().split(' ')
       this.setState({
         numWords: temp.length,
-        words: temp
+        words: temp,
+        pitches: new Array(temp.length).fill(100),
       });
+      console.log('here in handleTextAreaChange');
+    }
+
+    handleGoButtonClick(event) {
+      axios.post('http://localhost:5000/speak', {
+        speech: this.formSpeechString() //this.state.words.join(' ')
+      })
+      .then(function (response) {
+        console.log(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+    }
+
+    handleWordParamChange(type, index, value) {
+      if(type == 'pitch') {
+        var pitch = this.state.pitches;
+        console.log(pitch);
+        pitch[index] = value;
+        this.setState({
+          pitches: pitch,
+        });
+      }
     }
 
     componentDidMount() {
@@ -50,22 +89,23 @@ export default class Happiness extends Component {
       M.Dropdown.init(dropdowns, options);
     }
     
-    render() {
-      let state = this.state;
-      function createParamViewPanels(numWords) {
-        let divArr = [];
-        for (let i=0; i<numWords; i++) {
-          divArr.push(<ParamViewPanel word={state.words[i]} {...state}/>);
-        }
-        return divArr;
-        // return (
-        //   <ParamViewPanel />
-        // );
+    createParamViewPanels(numWords) {
+      
+      let divArr = [];
+      for (let i=0; i<numWords; i++) {
+        console.log('here');
+        divArr.push(<ParamViewPanel index={i} word={this.state.words[i]} handleParamChange={this.handleWordParamChange} {...this.state}/>);
       }
+      return divArr;
+      // return (
+      //   <ParamViewPanel />
+      // );
+    }
+
+    render() {
 
       return(
       <div>
-          
           <div class="row">
             <div class="col s3">
               <Menu />
@@ -138,14 +178,14 @@ export default class Happiness extends Component {
                     </form>
                 </div>
                 <div class="col s3 valign-wrapper">
-                  <a class="btn-floating btn-large waves-effect waves-light red">Go</a>
+                  <a class="btn-floating btn-large waves-effect waves-light red" onClick={this.handleGoButtonClick}>Go</a>
                   {/* <a class="btn-floating btn-large waves-effect waves-light red" title="White Speaker Icon #192589"><img src="https://icon-library.net//images/white-speaker-icon/white-speaker-icon-24.jpg" width="350" /></a>
                   <a class="btn-floating btn-large waves-effect waves-light red" href="https://icon-library.net/icon/white-speaker-icon-24.html">White Speaker Icon #192589</a> */}
                 </div>
               </div>
               <div class="row param-view">
                   <div class="col s10 param-chart">
-                    {createParamViewPanels(this.state.numWords)}
+                    {this.createParamViewPanels(this.state.numWords)}
                   </div>
                   <div class="col s2">                                 
                     <form action="#">
@@ -208,6 +248,7 @@ class HistoryTab extends Component {
 class ParamViewPanel extends Component {
   constructor(props) {
     super(props);
+    console.log('constructor of ParamViewPanal');
 
     this.state = {
       containerRect: Array(3),
@@ -220,6 +261,7 @@ class ParamViewPanel extends Component {
 
     this.handleContainerMouseDown = this.handleContainerMouseDown.bind(this);
     this.handleChildMouseDown = this.handleChildMouseDown.bind(this);
+    this.handlePitchChange = this.handlePitchChange.bind(this);
 
     this.temp = this.temp.bind(this);
 
@@ -278,10 +320,11 @@ class ParamViewPanel extends Component {
   }
 
   temp(num) {
-    // return (<div id="rectangle" style={{backgroundColor: "pink", width:'100%', height:'100%'}}
-    // ref={this.childRef} onMouseDown={this.handleChildMouseDown}/>);
-    // return(<h1>hahahaha</h1>);
     return (<div class="center-align" id={num} style={{backgroundColor: "greenyellow", width:'100%'}} ref={this.childRef[num]} onMouseDown={this.handleChildMouseDown}>&#x2015;</div>);
+  }
+
+  handlePitchChange(percentage) {
+    this.props.handleParamChange("pitch", this.props.index, Math.floor(percentage * (NaoConsts.speechPitchRange) + NaoConsts.speechPitchMin));
   }
 
   render() {
@@ -295,7 +338,7 @@ class ParamViewPanel extends Component {
       ref={this.containerRef[0]}// onMouseDown={this.handleContainerMouseDown}
       >
         {/* {this.temp()} */}
-      <BoundedDraggable element={this.temp(0)} childRect={this.state.childRect[0]} containerRect={this.state.containerRect[0]} />
+      <BoundedDraggable element={this.temp(0)} childRect={this.state.childRect[0]} containerRect={this.state.containerRect[0]} onShiftBar={this.handlePitchChange} />
       </div>;
     }
     if(this.props.paramViewSelected.speed) {
@@ -315,6 +358,7 @@ class ParamViewPanel extends Component {
       </div>;
     }
     if(numParams == 0) {
+      console.log('no params selected in paramsview');
       pitchParam = <div style={{height: '90%', width: '100%', backgroundColor:'white'}}></div>;
     }
 
@@ -338,108 +382,3 @@ class ParamViewPanel extends Component {
     );
   }
 } 
-
-// class ParamViewPanel extends Component {
-
-//   constructor(props) {
-//     super(props);
-
-
-//     this.numParams = 3;
-//     const defaultRect = { x: 0, y: 0, width: 200, height: 100, top: 0, right: 200, bottom: 100, left: 0 };
-
-//     this.state = {
-//       containerRect: Array(this.numParams),
-//       childRect: Array(this.numParams)
-//     };
-
-//     this.colorDict = {pitch: "yellow", speed: "pink", pauses: "green"};
-//     // this.containerRef = useRef([...Array(numParams)].map(() => React.createRef()));
-//     // this.childRef = useRef([...Array(numParams)].map(() => React.createRef()));
-//     this.containerRef = {};
-//     this.childRef = {};
-//     for(let i=0; i<this.numParams; i++) {
-//       this.containerRef[i] = React.createRef();
-//       this.childRef[i] = React.createRef();
-//     }
-//     console.log(this.childRef);
-//     // this.childRef = React.createRef();
-
-//     this.handleMouseDown = this.handleMouseDown.bind(this);
-//   }
-
-//   componentDidMount() {
-//     for(let i=0; i<this.numParams; i++) {
-//       this.handleMouseDown(i);
-//     }
-//   }
-
-//   handleMouseDown(i) {
-//     i = Number(i);
-//     console.log(this.containerRef);
-//     // this.containerRef.current.click();
-//     // this.handleContainerMouseDown();
-//     var newChildRect = this.state.childRect;
-//     var newContainerRect = this.state.containerRect;
-//     newChildRect[i] = this.childRef[i];
-//     newContainerRect[i] = this.containerRef[i];
-//     this.setState({
-//       childRect: newChildRect,
-//       containerRect: newContainerRect
-//     });
-//   }
-
-//   handleContainerRef(i, r) {
-//     // console.log(r.getBoundingClientRect());
-//     this.containerRef[i] = r.getBoundingClientRect();
-//   }
-
-//   handleChildRef(i, r) {
-//     console.log(r.getBoundingClientRect());
-//     this.childRef[i] = r.getBoundingClientRect();
-//   }
-
-//   createLine = (i) => {
-//     var id = "line_" + i.toString();
-//     return (<div id="rectangle" style={{backgroundColor: "black", width:'100%', height:'5px'}}
-//     ref={this.handleChildRef.bind(this, i)} onMouseDown={this.handleMouseDown(i)}
-//     />);
-//   }
-
-//   createListParam = () => {
-//     var selectedIndex = Object.values(this.props.paramViewSelected).filter(Boolean);
-//     var numParams = selectedIndex.length;
-//     var paramHeight = Math.floor(90/numParams).toString().concat('%');
-//     var temp = [];
-//     let i = 0;
-//     for(const param in this.props.paramViewSelected) {
-//       if(this.props.paramViewSelected[param]) {
-//         let color = this.colorDict[param];
-//         temp.push(
-//           <div
-//           ref={this.handleContainerRef.bind(this, i)}
-//           style={{height: [paramHeight], backgroundColor: [color]}}>
-//             <BoundedDraggable element={this.createLine} params={i} childRect={this.state.childRect[i]} containerRect={this.state.containerRect[i]} />
-//           </div>);
-//       }
-//       i += 1;
-//     }
-//     i=0;
-//     if(temp.length == 0) {
-//       temp.push(<div style={{height: '90%'}} />);
-//     }
-//     return temp;
-//   }
-
-//   render() {
-//     // console.log(paramHeight);
-
-
-//     return (
-//       <div className="card--content" >
-//         {this.createListParam()}
-//         <div className='center-align' style={{height: '10%', backgroundColor: 'white'}}>{this.props.word}</div>
-//       </div>
-//     );
-//   }
-// } 

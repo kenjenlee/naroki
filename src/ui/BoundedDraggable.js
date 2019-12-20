@@ -10,6 +10,9 @@ export default class BoundedDraggable extends React.Component {
     M.AutoInit();
 
     // console.log("Tops are " + this.props.rect.top + " " + this.props.bound.top);
+    // this.setState({
+    //   translateY: Math.floor((this.props.containerRect.height - this.props.childRect.height)/2),
+    // })
   } 
 
   state = {
@@ -99,6 +102,9 @@ export default class BoundedDraggable extends React.Component {
       }
     );
     console.log(this.state);
+
+    // call callback for param change
+    this.props.onShiftBar(1-(this.state.translateY/(this.props.containerRect.height - this.props.childRect.height)));
   };
 
   render() {
