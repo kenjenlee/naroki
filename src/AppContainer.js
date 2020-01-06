@@ -23,9 +23,6 @@ export default class AppContainer extends Component {
           <Route exact path="/" component={App}/>
           <Route exact path="/happiness" component={Happiness}/>
           <Route exact path="/test" component={Test}/>
-          {/* <Route exact path="/dashboard" component={Dashboard}/>
-          <Route exact path="/admin" component={Admin}/>
-          <Route component={NotFound}/> */}
         </Switch>
       </Router>
     )
