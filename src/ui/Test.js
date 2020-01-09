@@ -1,226 +1,289 @@
-import React from 'react';
-import styled, { css } from 'styled-components';
-import M from "materialize-css";
-import 'materialize-css/dist/css/materialize.min.css';
-import BoundedDraggable from './BoundedDraggable.js';
-
-class Test2 extends React.Component {
-
-  onDragStart= (event) => {
-    console.log('dragstart on div: ', event.target.id);
-    event.dataTransfer.setData("taskName", "taskName");
-  }
-
-  render() {
-    return (
-      <div>
-        <div id="rectangle" draggable='true' onDragStart = {(event) => this.onDragStart(event)} style={{backgroundColor: "green", width:'200px', height:'100px'}} />
-      </div>
-    );
-  }
-}
+import React, {Component} from 'react'
+import ReactDOM from 'react-dom'
+import buckets from 'buckets-js'
+import Doc from '../text_editor/Doc';
+import {keys} from '../text_editor/Const.js'
+// import styled from 'styled-components'
+// import { Floater, MenuBar } from '@aeaton/react-prosemirror'
+// import { options, menu } from '@aeaton/react-prosemirror-config-default'
+// import Editor from './text_editor/Editor.js'
+// import { EditorState } from 'prosemirror-state'
+// import { EditorView } from 'prosemirror-view'
+// import SetDocAttr from './text_editor/SetDocAttr.js'
 
 
-// cross ref: https://stackoverflow.com/questions/39913863/how-to-manually-trigger-click-event-in-reactjs/39914279
-export default class Test extends React.Component {
+// const Container = styled('div')`
+//   position: absolute;
+//   top: 10vh;
+//   left: 0;
+//   right: 0;
+//   bottom: 0;
+// `
 
+// const Input = styled('div')`
+//   width: 100%;
+//   height: 50%;
+//   overflow-y: auto;
+// `
+
+// const Output = styled('pre')`
+//   width: 100%;
+//   height: 50%;
+//   overflow-y: auto;
+//   padding: 1em;
+//   background: black;
+//   color: lawngreen;
+//     `
+
+// export default class Test extends Component {
+//   constructor(props) {
+//     super(props);
+//     // this.state = {
+//     //   state: 
+//     // };
+//     this.view = new EditorView(null, {
+//       state: EditorState.create(options),
+//       dispatchTransaction: this.dispatchTransaction,
+//       attributes: this.props.attributes,
+//       nodeViews: this.props.nodeViews
+//     })
+//   }
+
+//   dispatchTransaction = transaction => {
+//     const { state, transactions } = this.view.state.applyTransaction(transaction);
+
+//     this.view.updateState(state);
+
+//     if (transactions.some(tr => tr.docChanged)) {
+//       document.getElementById('output').textContent = JSON.stringify(state.doc, null, 2);
+//       console.log(state.doc);
+//       transactions.forEach(tr => {
+//         if(tr.docChanged) {
+//           console.log("Transform will be printed");
+//           console.log(tr.steps[0].getMap().ranges); //[start, oldSize, newSize]
+//           // if newSize-oldSize == 1 -> insert -> inserted char returned
+//           // if newSize == oldSize -> replace -> replacement char returned
+//           // if oldSize-newSize == 1 -> delete -> no char returned
+//           console.log(tr);
+//           console.log(tr.steps[0].slice.content.content[0].text);  // text inserted
+//         }
+//       })
+//     }
+
+//     this.forceUpdate();
+//   }
+
+//   handleButtonClick = () => {
+//     const transaction = this.view.state.tr
+//       .step(new SetDocAttr('foo', 'bar'))
+//       .step(new SetDocAttr('bar', ['foo', 'foo']));
+//     this.dispatchTransaction(transaction);
+//   }
+
+//   render() {
+//     return (
+//       <Container>
+//         <button onClick={this.handleButtonClick}>haha</button>
+//         <Input>
+//           <Editor
+//             view={this.view}
+//             render={({ editor, view }) => (
+//               <React.Fragment>
+//                 <MenuBar menu={menu} view={view} />
+
+//                 <Floater view={view}>
+//                   <MenuBar menu={{ marks: menu.marks }} view={view} />
+//                 </Floater>
+
+//                 {editor}
+//               </React.Fragment>
+//             )}
+//           />
+//         </Input>
+//         <Output id={'output'} />
+//       </Container>
+//     );
+//   }
+// }
+
+export default class Test extends Component {
   constructor(props) {
     super(props);
-
-    const defaultRect = { x: 0, y: 0, width: 200, height: 100, top: 0, right: 200, bottom: 100, left: 0 };
-
     this.state = {
-      containerRect: defaultRect,
-      childRect: defaultRect
+      doc: new Doc(),
+      highlightedRegion: {anchorOffset: 0, focusOffset: 0},
+      isHighlighted: false,
+      prevCursorOffset: -1,
+      rawInput: "",
+      prevKey: '',
+      reundo: false,
     };
-
-    this.containerRef = React.createRef();
-    this.childRef = React.createRef();
-    this.getRectsInterval = undefined;
-
-    this.handleContainerMouseDown = this.handleContainerMouseDown.bind(this);
-    this.handleChildMouseDown = this.handleChildMouseDown.bind(this);
-
-    this.temp = this.temp.bind(this);
+    
 
   }
 
-  handleContainerMouseDown() {
-    console.log(this.state.containerRect);
+  // TODO Inefficient code here called redundantly by both keyup and mouseup
+  checkTextIsHighlighted = () => {
+    // console.log(window.getSelection());
+    let selection = window.getSelection();
+    if(selection.anchorOffset != selection.focusOffset 
+      && selection.anchorNode.nodeName == "#text"
+      && selection.focusNode.nodeName == "#text") {
+        this.setState({
+          highlightedRegion: {anchorOffset: selection.anchorOffset, focusOffset: selection.focusOffset},
+          isHighlighted: true
+        });
+        console.log("here");
+    } else if(this.state.isHighlighted) {
+      this.setState({
+        isHighlighted: false
+      });
+    }
+  }
+
+  handleKeyDown = (e) => {
+    console.log(window.getSelection());
+    if(keys.navigation.includes(e.key)) {
+      return; // dealt with in key up event
+    }
+    this.setState({isHighlighted: false});
+    // prevent default for undo and redo. Implement own logic.
+    if(e.ctrlKey && (e.key == 'z' || e.key == 'y' || e.key == 'Z' || e.key == 'Y')) {
+      e.preventDefault();
+      this.setState({reundo: true});
+      if(e.key == 'z') {
+        // trigger custom undo logic
+      } else if(e.key == 'y') {
+        // triger custom redo logic
+      }
+      return;
+    } else if(!keys.navigation.includes(e.key)) {
+      // e.type == keyup and non-navigation, no highlighted region
+      this.setState({isHighlighted: false});
+      if(keys.whitespace.includes(e.key)) {
+        // whitespace character
+        let temp = this.state.doc;
+        temp.addText(window.getSelection().focusOffset, e.key);
+        this.setState({
+          doc: temp
+        });
+        console.log(this.state.doc.getString());
+      } else if(e.key.length == 1 && !e.ctrlKey) {
+        // printable character
+        // console.log('this is a printable non-whitespace character');
+        // console.log(window.getSelection().focusOffset);
+        // console.log(e.key);
+        let temp = this.state.doc;
+        temp.addText(window.getSelection().focusOffset, e.key);
+        this.setState({
+          doc: temp
+        });
+        console.log(this.state.doc.getString());
+      } else if(e.ctrlKey) {
+        switch(e.key) {
+          case 'x':
+          case 'X':
+            break;
+          case 'v':
+          case 'V':
+            break;
+          default:
+            break;
+        }
+      } else {
+        switch(e.key) {
+          case 'Backspace':
+            break;
+          case 'Clear':
+            break;
+          case 'Cut':
+            break;
+          case 'Delete':
+            break;
+          case 'Paste':
+            break;
+          default:
+            break;
+        }
+      }
+    }
+    // console.log(window.getSelection().nodeName);
     this.setState({
-      containerRect: this.containerRef.current.getBoundingClientRect(),
+      prevKey: e.key, 
+      prevCursorOffset: 
+        window.getSelection().focusOffset
     });
+    
+    this.setState({reundo: false});
   }
 
-  handleChildMouseDown() {
-    console.log(this.state.childRect);
-    // this.containerRef.current.click();
-    // this.handleContainerMouseDown();
+  // TODO bug where if you press shift+char quickly the capital letter is printed
+  // but the small letter is passed into the event first after the shift key
+  handleKeyMouseUp = (e) => {
+    // cut paste needs to be here as well????///// TODO
+
+
+    // if it's whitespace character (tab, space, enter)
+    // console.log(e.key);
+    // console.log(e.type);
+    if(e.type == 'mouseup' || keys.navigation.includes(e.key)) {
+      // navigation event, change of cursor position
+      this.checkTextIsHighlighted();
+    }
+    // console.log(window.getSelection().nodeName);
     this.setState({
-      childRect: this.childRef.current.getBoundingClientRect(),
+      prevKey: e.key, 
+      prevCursorOffset: 
+        window.getSelection().focusOffset
     });
-  }
-
-  // componentDidMount() {
-  //   this.getRectsInterval = setInterval(() => {
-  //     this.setState(state => {
-  //       const containerRect = this.containerRef.current.getBoundingClientRect();
-  //       return JSON.stringify(containerRect) !== JSON.stringify(state.containerRect) ? null : { containerRect };
-  //     });
-  //     this.setState(state => {
-  //       const tooltipRect = this.tooltipRef.current.getBoundingClientRect();
-  //       return JSON.stringify(tooltipRect) === JSON.stringify(state.tooltipRect) ? null : { tooltipRect };
-  //     });
-  //   }, 10);
-  // }
-
-  temp() {
-    return (<div id="rectangle" style={{backgroundColor: "green", width:'200px', height:'100px'}}
-    ref={this.childRef} onMouseDown={this.handleChildMouseDown}
-    ></div>);
+    // console.log(e.target.value);
+    // if it's backspace/delete
+    // below also includes arrow keys
+    // if(strlen(String.fromCharCode(e.keyCode))) {
+    //   console.log(window.getSelection());
+    //   console.log(e.keyCode);
+    // }
+    
   }
 
   render() {
     return (
-      <div className='row' style={{height: '60vh', backgroundColor:'indigo'}}
-      ref={this.containerRef} onMouseDown={this.handleContainerMouseDown}
+      <div contentEditable="true" style={{border: "1px solid #ccc", width: '50vw', height: "50vh"}}
+        onKeyUp={this.handleKeyMouseUp}
+        onMouseUp={this.handleKeyMouseUp}
+        onKeyDown={this.handleKeyDown}
       >
-        {/* {this.temp()} */}
-      <BoundedDraggable element={this.temp} childRect={this.state.childRect} containerRect={this.state.containerRect} />
+
       </div>
     );
   }
 }
 
-// reference https://engineering.datorama.com/mastering-drag-drop-with-reactjs-part-01-39bed3d40a03
-class Testo extends React.Component {
-  componentDidMount() {
-    // Auto initialize all the things!
-    M.AutoInit();
-
-    // console.log("Tops are " + this.props.rect.top + " " + this.props.bound.top);
-  } 
-
-  state = {
-    isDragging: false,
-
-    originalX: 0,
-    originalY: 0,
-
-    translateX: 0,
-    translateY: 0,
-
-    lastTranslateX: 0,
-    lastTranslateY: 0,
-  };
-  
-  componentWillUnmount() {
-    window.removeEventListener('mousemove', this.handleMouseMove);
-    window.removeEventListener('mouseup', this.handleMouseUp);
-  }
-
-  handleMouseDown = ({ clientX, clientY }) => {
-    window.addEventListener('mousemove', this.handleMouseMove);
-    window.addEventListener('mouseup', this.handleMouseUp);
-
-    if (this.props.onDragStart) {
-      this.props.onDragStart();
-    }
-
-    this.setState({
-      originalX: clientX,
-      originalY: clientY,
-      isDragging: true,
-    });
-  };
-
-  handleMouseMove = ({ clientX, clientY }) => {
-    const { isDragging } = this.state;
-    const { onDrag } = this.props;
-
-    if (!isDragging) {
-      return;
-    }
-    
-    // console.log(this.state.translateY + " " + this.state.originalY + " " + this.state.lastTranslateY);
-
-    var nextTransY = clientY - this.state.originalY + this.state.lastTranslateY;
-    var actualTransY = nextTransY;
-
-    if(this.props.childRect.top + clientY - this.state.originalY <= this.props.containerRect.top) {
-      console.log("collision top");
-      actualTransY = 0;
-    } else if(this.props.childRect.bottom + clientY - this.state.originalY >= this.props.containerRect.bottom) {
-      // console.log("collision bottom");
-      actualTransY = this.props.containerRect.bottom - this.props.childRect.height;
-    }
-
-    this.setState(prevState => ({
-      translateX: clientX - prevState.originalX + prevState.lastTranslateX,
-      translateY: actualTransY
-    }), () => {
-      if (onDrag) {
-        onDrag({
-          translateX: this.state.translateX,
-          translateY: this.state.translateY
-        });
-      }
-    });
-  };
-
-  handleMouseUp = () => {
-    window.removeEventListener('mousemove', this.handleMouseMove);
-    window.removeEventListener('mouseup', this.handleMouseUp);
-
-    this.setState(
-      {
-        originalX: 0,
-        originalY: 0,
-        lastTranslateX: this.state.translateX,
-        lastTranslateY: this.state.translateY,
-
-        isDragging: false
-      },
-      () => {
-        if (this.props.onDragEnd) {
-          this.props.onDragEnd();
-        }
-      }
-    );
-    console.log(this.state);
-  };
-
-  render() {
-    const { children } = this.props;
-    const { translateX, translateY, isDragging } = this.state;
-    // console.log("rerendering Testo");
-
-    return (
-        <Container
-          onMouseDown={this.handleMouseDown}
-          x={translateX}
-          y={translateY}
-          isDragging={isDragging}
-        >
-          {this.props.element()}
-      </Container>
-    );
-  }
-}
-
-const Container = styled.div.attrs({
-  // style: ({ x, y }) => ({
-  //   transform: `translate(${x}px, ${y}px)`
-  // }),
-  style: ({ y }) => ({
-    transform: `translateY(${y}px)`
-  }),
-})`
-  // cursor: grab;
-  
-  ${({ isDragging }) =>
-  isDragging && css`
-    opacity: 0.8;
-    cursor: grabbing;
-  `};
-`;
+// import React from 'react';
+// import ReactDOM from 'react-dom';
+// import {Editor, EditorState} from 'draft-js';
+// export default class Test extends React.Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {editorState: EditorState.createEmpty()};
+//     this.onChange = editorState => {
+//       if(this.state.editorState.getCurrentContent() != editorState.getCurrentContent()) {
+//         console.log('current content is not the same');
+//         console.log(editorState.getCurrentContent().getSelectionBefore());
+//         console.log(editorState.getCurrentContent().getSelectionAfter());
+//         console.log(editorState.getCurrentContent().getBlockMap());
+//       }
+//       if(this.state.editorState.getSelection() != editorState.getSelection()) {
+//         console.log('selection is not the same');
+//       }
+//       this.setState({editorState}); 
+      
+//       // console.log(editorState.getCurrentContent().getEntityMap())
+//     };
+//   }
+//   render() {
+//     return (
+//       <Editor editorState={this.state.editorState} onChange={this.onChange} />
+//     );
+//   }
+// }
