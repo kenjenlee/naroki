@@ -178,7 +178,7 @@ export default class Test extends Component {
         this.setState({
           doc: temp
         });
-        console.log(this.state.doc.getString());
+        
       } else if(e.ctrlKey) {
         switch(e.key) {
           case 'x':
@@ -191,22 +191,37 @@ export default class Test extends Component {
             break;
         }
       } else {
+        let temp = this.state.doc;
+        let offset = window.getSelection().focusOffset;
         switch(e.key) {
           case 'Backspace':
+            
+            if(offset > 0) {
+              temp.deleteChar(offset-1);
+            }
+            
             break;
           case 'Clear':
             break;
           case 'Cut':
             break;
           case 'Delete':
+            if(offset < temp.getString().length) {
+              temp.deleteChar(offset);
+            }
             break;
           case 'Paste':
             break;
           default:
             break;
         }
+        this.setState({
+          doc: temp
+        });
+        
       }
     }
+    console.log(this.state.doc.getString());
     // console.log(window.getSelection().nodeName);
     this.setState({
       prevKey: e.key, 

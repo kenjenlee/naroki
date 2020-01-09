@@ -11,6 +11,11 @@ export default class Doc {
     this.wordList.add(new DummyWord());
   }
 
+  /**
+   * 
+   * Test Cases
+   * 1. 'this is' -> 'this sis'
+   */
   addText = (offset, text) => {
     if (text == " " || text == "Tab" || text == "Enter") {
       text = " ";
@@ -22,7 +27,7 @@ export default class Doc {
 
       if (text == " ") {
         newNode = new Word();
-        this.wordList.elementAtIndex(0).updateTrailingWhitespace(" ");
+        this.wordList.elementAtIndex(0).addChar(0, " ");
       } else {
         newNode = new Word(text);
       }
@@ -32,45 +37,64 @@ export default class Doc {
     } else {
       let offsetSum = 0,
         nodeIndex = 1,
-        lastOffsetSum = 0;
-      while (offsetSum < offset) {
-        // console.log(lastOffsetSum);
-        // console.log(nodeIndex);
-        // console.log('get length');
-        // console.log(this.wordList.elementAtIndex(nodeIndex).getLength());
-        let node = this.wordList.elementAtIndex(nodeIndex);
-        offsetSum += node.getLength();
-        // console.log(offsetSum);
-        if (
-          offsetSum < offset ||
-          (offsetSum == offset && node.trailingWhitespace)
-        ) {
-          lastOffsetSum = offsetSum;
-          nodeIndex += 1;
+        lastOffsetSum = 0,
+        createNewNode = false;
+
+      if (offset <= this.wordList.elementAtIndex(0).getLength()) {
+        if (text == " ") {
+          nodeIndex = 0;
+        } else {
+          createNewNode = true;
+        }
+        console.log("going to first node");
+      } else {
+        while (offsetSum < offset) {
+          let node = this.wordList.elementAtIndex(nodeIndex);
+          offsetSum += node.getLength();
+
+          if (offsetSum < offset ||
+            (text != ' ' && this.wordList.elementAtIndex(nodeIndex + 1))) {
+            lastOffsetSum = offsetSum;
+            nodeIndex += 1;
+          } else {
+            if (
+              ((offset - lastOffsetSum) > node.getTrimmedLength() &&
+                node.hasTrailingWhitespace() &&
+                text != " ") ||
+              (text == " " && (offset - lastOffsetSum) < node.getTrimmedLength())
+            ) {
+              // console.log(offset - lastOffsetSum);
+              // console.log(node.getTrimmedLength());
+              // lastOffsetSum = offsetSum;
+              nodeIndex += 1;
+              createNewNode = true;
+            }
+          }
         }
       }
-      // console.log(this.wordList);
-      // console.log(nodeIndex);
-      // console.log(offset);
-      // console.log(lastOffsetSum);
-      if (text == " ") {
-        let node = this.wordList.elementAtIndex(nodeIndex);
-        let str = node.word.slice(offset - lastOffsetSum);
-        let newNode = new Word(str);
-        if (node.trailingWhitespace) {
-          newNode.updateTrailingWhitespace(node.trailingWhitespace);
-        }
-        this.wordList.add(newNode, nodeIndex + 1);
-        if(offset == lastOffsetSum) {
-          node.updateTrailingWhitespace(
-            node.trailingWhitespace ? node.trailingWhitespace + text : text
-          );
+
+      if (createNewNode) {
+        if (text == " ") {
+          // from "is something" to "is some thing"
+            // console.log(this.getString());
+            // console.log('createnewnode and text is space');
+            // console.log(nodeIndex);
+          let node = this.wordList.elementAtIndex(nodeIndex - 1);
+          let newStr = node.word.slice(offset - lastOffsetSum);
+          let newNode = new Word(newStr);
+          this.wordList.add(newNode, nodeIndex);
+          node.delChar(offset - lastOffsetSum, newStr.length);
+          node.addChar(offset - lastOffsetSum, text);
+          // console.log(node.word);
+          // console.log(newNode.word);
         } else {
-          node.updateTrailingWhitespace(
-            text
-          );
+          // from "some  thing" to "some h thing"
+          let node = this.wordList.elementAtIndex(nodeIndex - 1);
+          let newStr = node.word.slice(offset - lastOffsetSum);
+          let newNode = new Word(text + newStr);
+          this.wordList.add(newNode, nodeIndex);
+          node.delChar(offset - lastOffsetSum, newStr.length);
         }
-        node.delChar(offset - lastOffsetSum, str.length);
       } else {
         this.wordList
           .elementAtIndex(nodeIndex)
@@ -79,7 +103,86 @@ export default class Doc {
     }
   };
 
-  deleteText = () => {};
+  deleteText = (offset, length) => {
+    // let offsetSum = 0,
+    //   nodeIndex = 1,
+    //   lastOffsetSum = 0;
+    // while (offsetSum < offset) {
+    //   // console.log(lastOffsetSum);
+    //   // console.log(nodeIndex);
+    //   // console.log('get length');
+    //   // console.log(this.wordList.elementAtIndex(nodeIndex).getLength());
+    //   let node = this.wordList.elementAtIndex(nodeIndex);
+    //   offsetSum += node.getLength();
+    //   // console.log(offsetSum);
+    //   if (
+    //     offsetSum < offset ||
+    //     (offsetSum == offset && node.trailingWhitespace)
+    //   ) {
+    //     lastOffsetSum = offsetSum;
+    //     nodeIndex += 1;
+    //   }
+    // }
+  };
+
+  /**
+   * @function deleteChar delete a single character from the doc
+   * 
+   * 
+   * Test Cases:
+   *  1. 'one potato haha' -> 'one potato hah'
+   *  2. 'one potato haha' -> 'one potato haa'
+   *  3. 'one potato haha' -> 'one potato aha'
+   *  4. 'one potato haha' -> 'one potat haha'
+   *  5. 'one potato  haha' -> 'one potato haha'
+   *  6. 'one potato haha' -> 'one potatohaha'
+   *    number of nodes in wordList decreases by one
+   *  7. 'one i haha' -> 'one  haha'
+   *     number of nodes in wordList decreases by one
+   */
+  deleteChar = offset => {
+    if(offset >= this.getString().length) return;
+    let offsetSum = 0,
+      nodeIndex = 0,
+      lastOffsetSum = 0;
+    while (offsetSum <= offset) {
+      // console.log(lastOffsetSum);
+      // console.log(nodeIndex);
+      // console.log('get length');
+      // console.log(this.wordList.elementAtIndex(nodeIndex).getLength());
+      let node = this.wordList.elementAtIndex(nodeIndex);
+      offsetSum += node.getLength();
+      // console.log(offsetSum);
+      if (offsetSum <= offset) {
+        lastOffsetSum = offsetSum;
+        nodeIndex += 1;
+      }
+    }
+    let node = this.wordList.elementAtIndex(nodeIndex);
+    console.log(nodeIndex);
+    node.delChar(offset - lastOffsetSum, 1);
+    if (nodeIndex > 0 && node.getTrimmedLength() == 0) {
+      // previous node eats this node up if this node only has whitespace in it
+      let prevNode = this.wordList.elementAtIndex(nodeIndex - 1);
+      if (node.getLength() > 0) {
+        prevNode.addChar(prevNode.getLength(), node.word);
+      }
+      prevNode.updateDeletedNodesPointer(node);
+      this.wordList.removeElementAtIndex(nodeIndex);
+    } else if (
+      nodeIndex > 0 &&
+      node.getLength() == node.getTrimmedLength() &&
+      nodeIndex < this.wordList.size()-1
+    ) {
+      console.log(this.wordList.size());
+      console.log(nodeIndex);
+      // this node eats next node up if this node no longer have trailing whitespace
+      let nextNode = this.wordList.elementAtIndex(nodeIndex + 1);
+      node.addChar(node.getLength(), nextNode.word);
+      node.updateDeletedNodesPointer(nextNode);
+      this.wordList.removeElementAtIndex(nodeIndex + 1);
+    }
+  };
 
   modifyText = () => {};
 
@@ -103,25 +206,14 @@ export default class Doc {
     let str = "",
       i = 0;
     this.wordList.forEach(word => {
-      let whitespace;
-      // switch (word.trailingWhitespace) {
-      //   case " ":
-      //   case "Tab":
-      //   case "Enter":
-      //   default:
-      //     whitespace = " ";
-      //     break;
-      // }
-      // console.log(i);
       i += 1;
-      // console.log(word.trailingWhitespace ? 'there is trailing whitespace ' + word.trailingWhitespace.replace(' ', 'd'): 'no trailing whitespace');
-      let toConcat = word.trailingWhitespace
-        ? word.word.concat(word.trailingWhitespace)
-        : word.word;
-      str = str.concat(toConcat);
-      // console.log(str);
+      str = str.concat(word.word);
+      // console.log(str.length);
+      console.log(str.replace(/\s/g, "X"));
     });
     // remove leading and tailing space
-    return str.trim();
+    // return str.trim();
+    console.log(this.wordList.size());
+    return str.replace(/\s/g, "X");
   };
 }

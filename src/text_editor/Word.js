@@ -1,5 +1,8 @@
 // NOTE any symbols like , and . might have a default pause associated
 // with it in the Nuance package, but is still stated as 0 here.
+import buckets from 'buckets-js';
+
+
 export default class Word {
   constructor(char = '') {
 
@@ -28,7 +31,7 @@ export default class Word {
     this.speechParamChangeIndex = -1;
 
 
-    this.deletedNodesPointer = null;
+    this.deletedNodesPointer = buckets.LinkedList();
     
 
     this.trailingWhitespace = '';
@@ -68,12 +71,21 @@ export default class Word {
   }
 
   delChar = (index, len) => {
+    if(len < 1) {return;}
+    console.log(index);
+    console.log(len);
     this.addWordChange('DEL', index, this.word.slice(index, index+len));
     if(index == 0) {
       this.word = this.word.slice(len);
     } else {
+      let temp1 = this.word.slice(0, index);
+      let temp2 = this.word.slice(index+len);
+      console.log(temp1);
+      console.log(temp1.length);
+      console.log(temp2);
       this.word = this.word.slice(0, index) + this.word.slice(index+len);
     }
+    console.log(this.word);
   }
 
   updateSpeechParam = (paramName, paramValue) => {
@@ -90,56 +102,57 @@ export default class Word {
     this.speechParam.paramName = paramValue;
   }
 
-  updateTrailingWhitespace = (whitespace) => {
-    this.addChangeType('s');
-    let change = {old: this.trailingWhitespace, new: whitespace};
-    if(this.trailingWhitespaceChangeIndex == this.trailingWhitespaceChanges.length - 1) {
-      this.trailingWhitespaceChanges.push(change);
-    } else {
-      this.trailingWhitespaceChanges[this.trailingWhitespaceChangeIndex+1] = change;
-    }
-    this.trailingWhitespaceChangeIndex += 1;
-
-    // update actual current speech params
-    this.trailingWhitespace = whitespace;
+  updateDeletedNodesPointer = (node) => {
+    this.deletedNodesPointer.add(node, this.deletedNodesPointer.size());
+    // TODO add addChangeType and stuff
   }
+
+  // updateTrailingWhitespace = (whitespace) => {
+  //   this.addChangeType('s');
+  //   let change = {old: this.trailingWhitespace, new: whitespace};
+  //   if(this.trailingWhitespaceChangeIndex == this.trailingWhitespaceChanges.length - 1) {
+  //     this.trailingWhitespaceChanges.push(change);
+  //   } else {
+  //     this.trailingWhitespaceChanges[this.trailingWhitespaceChangeIndex+1] = change;
+  //   }
+  //   this.trailingWhitespaceChangeIndex += 1;
+
+  //   // update actual current speech params
+  //   this.trailingWhitespace = whitespace;
+  // }
 
   undo = () => {}
 
   redo = () => {}
 
   getLength = () => {
-    return this.word.length + (this.trailingWhitespace ? this.trailingWhitespace.length : 0);
+    // return this.word.length + (this.trailingWhitespace ? this.trailingWhitespace.length : 0);
+    return this.word.length;
+  }
+
+  hasTrailingWhitespace = () => {
+    // does not matter how long the trailing whitespace is
+    return this.word.slice(-1) === ' ';
+  }
+
+  getTrimmedLength = () => {
+    return this.word.trim().length;
   }
 
 }
 
 // acts as Dummy word with no word or params, just a pointer to deleted nodes
 export class DummyWord extends Word {
-
-  addChangeType = (type) => {
-    if(type != 'p' && type != 'd' && type != 's') {
-      throw Error("Dummy word can only be used for changing pause parameter or modify pointer to deleted nodes.");
-    }
-    if(this.changeTypeSequenceIndex == this.changeTypeSequence.length) {
-      this.changeTypeSequenceIndex.push(type);
-    } else {
-      this.changeTypeSequence[this.changeTypeSequenceIndex + 1] = type;
-    }
-    this.changeTypeSequenceIndex += 1;
-  }
-
   // TODO throw errors???
-  addWordChange = (action, index, str) => {
-    return;
-  }
-
   addChar = (index, char) => {
-    return;
-  }
-
-  delChar = (index, len) => {
-    return;
+    if(char.trim().length > 0) {return;}
+    this.addWordChange('INS', index, char);
+    if(index == 0) {
+      this.word = char + this.word;
+    } else {
+      this.word = this.word.slice(0, index) + char + this.word.slice(index);
+    }
+    
   }
 
   updateSpeechParam = (paramName, paramValue) => {
