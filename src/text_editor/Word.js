@@ -132,6 +132,8 @@ export default class Word {
 
   hasTrailingWhitespace = () => {
     // does not matter how long the trailing whitespace is
+    console.log('has trailing whitespace?');
+    console.log(this.word.slice(-1) === ' ');
     return this.word.slice(-1) === ' ';
   }
 

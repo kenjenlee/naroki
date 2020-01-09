@@ -53,7 +53,9 @@ export default class Doc {
           offsetSum += node.getLength();
 
           if (offsetSum < offset ||
-            (text != ' ' && this.wordList.elementAtIndex(nodeIndex + 1))) {
+            // below is from 'is some' -> 'is asome'
+            (text != ' ' && this.wordList.elementAtIndex(nodeIndex + 1) && offset == offsetSum)) {
+            console.log('JAJAJAJA');
             lastOffsetSum = offsetSum;
             nodeIndex += 1;
           } else {
@@ -89,6 +91,7 @@ export default class Doc {
           // console.log(newNode.word);
         } else {
           // from "some  thing" to "some h thing"
+          console.log('IAHOIAHAOI');
           let node = this.wordList.elementAtIndex(nodeIndex - 1);
           let newStr = node.word.slice(offset - lastOffsetSum);
           let newNode = new Word(text + newStr);
