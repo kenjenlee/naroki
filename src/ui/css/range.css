@@ -7,6 +7,11 @@
   margin: 0px;
 }
 
+input[type=text]
+{
+    font-size:5px;
+}
+
 .range-field {
   display: inline-block;
   width: 20px;

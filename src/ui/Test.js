@@ -225,101 +225,115 @@ import noUiSlider from 'nouislider';
 //   `};
 // `;
 
+// export default class Test extends Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       rangeValue:11,
+//       bubbleVisibility: 'hidden',
+//       thumbClasses: ''
+//     };
+//     // M.AutoInit();
+//   }
+
+//   componentDidMount() {
+    
+//     // var slider = document.getElementById('test-slider');
+//     // noUiSlider.create(slider, {
+//     //  start: [20, 80],
+//     //  connect: true,
+//     //  step: 1,
+//     //  orientation: 'horizontal', // 'horizontal' or 'vertical'
+//     //  range: {
+//     //    'min': 0,
+//     //    'max': 100
+//     //  },
+//     // //  format: wNumb({
+//     // //    decimals: 0
+//     // //  })
+//     // });
+//     // var array_of_dom_elements = document.querySelectorAll("input[type=range]");
+//     // M.Range.init(array_of_dom_elements);
+//     // M.AutoInit();
+//   }
+
+//   handleMouseUpDown = (e) => {
+//     switch(e.type) {
+//       case 'mousedown':
+//         this.setState({
+//           bubbleVisibility: 'visible',
+//           thumbClasses: 'active'
+//         });
+//         break;
+//       case 'mouseup':
+//         this.setState({
+//           bubbleVisibility: 'hidden',
+//           thumbClasses: ''
+//         });
+//         break;
+//       default:
+//         break;
+//     }
+//   }
+
+//   handleRangeChange = (e) => {
+//     this.setState({
+//       rangeValue: e.target.value
+//     });
+//   }
+
+//   handleTextInputChange = (e) => {
+//     this.setState({
+//       rangeValue: e.target.value
+//     });
+//   }
+
+//   render() {
+//     return(
+//       // <input type="range" min="0" max="11" value="7" step="1" orient="vertical"/>
+//       <div className="row" style={{marginTop:'30px'}}>
+//         <div className="col s1 push-s2">
+//           <p class="range-field">
+//             <input type="range" min="0" max="11" step="1" onChange={this.handleRangeChange}/>
+//           </p>
+//         </div>
+//         <div className="col s1 push-s5">
+//             <label for="first_name">Pitch</label>
+//             <input placeholder="Pitch" id="first_name" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleTextInputChange}/>
+//           <div className="row center-align no-margin">
+//             <img src='./icons/noun_wave_1985513.svg' height="30px" width="30px"/>
+//           </div>
+
+        
+//           {/* <div id="test-slider"></div> */}
+//           {/* <Nouislider range={{ min: 0, max: 100 }} start={[20, 80]} connect /> */}
+//           <div className="row center-align no-margin">
+//             <p className="range-field">
+//               <input className={this.state.thumbClasses} type="range" min="0" max="11" step="1" value={this.state.rangeValue} onChange={this.handleRangeChange} onMouseDown={this.handleMouseUpDown} onMouseUp={this.handleMouseUpDown}/>
+//               {/* <span className={"thumb " + this.state.thumbClasses} style={{visibility: this.state.bubbleVisibility}}>
+//                 <span className="value">hehe{this.state.rangeValue}</span> 
+//               </span> */}
+//             </p>
+//           </div>
+
+//           <div className="row center-align no-margin">
+//             <img src='./icons/noun_waves_2767962.svg' height="30px" width="30px"/>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+// }
+
 export default class Test extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      rangeValue:11,
-      bubbleVisibility: 'hidden',
-      thumbClasses: ''
-    };
-    // M.AutoInit();
-  }
-
-  componentDidMount() {
-    
-    // var slider = document.getElementById('test-slider');
-    // noUiSlider.create(slider, {
-    //  start: [20, 80],
-    //  connect: true,
-    //  step: 1,
-    //  orientation: 'horizontal', // 'horizontal' or 'vertical'
-    //  range: {
-    //    'min': 0,
-    //    'max': 100
-    //  },
-    // //  format: wNumb({
-    // //    decimals: 0
-    // //  })
-    // });
-    // var array_of_dom_elements = document.querySelectorAll("input[type=range]");
-    // M.Range.init(array_of_dom_elements);
-    // M.AutoInit();
-  }
-
-  handleMouseUpDown = (e) => {
-    switch(e.type) {
-      case 'mousedown':
-        this.setState({
-          bubbleVisibility: 'visible',
-          thumbClasses: 'active'
-        });
-        break;
-      case 'mouseup':
-        this.setState({
-          bubbleVisibility: 'hidden',
-          thumbClasses: ''
-        });
-        break;
-      default:
-        break;
-    }
-  }
-
-  handleRangeChange = (e) => {
-    this.setState({
-      rangeValue: e.target.value
-    });
-  }
-
-  handleTextInputChange = (e) => {
-    this.setState({
-      rangeValue: e.target.value
-    });
   }
 
   render() {
     return(
-      // <input type="range" min="0" max="11" value="7" step="1" orient="vertical"/>
-      <div className="row" style={{marginTop:'30px'}}>
-        <div className="col s1 push-s2">
-          <p class="range-field">
-            <input type="range" min="0" max="11" step="1" onChange={this.handleRangeChange}/>
-          </p>
-        </div>
-        <div className="col s1 push-s5">
-            <label for="first_name">Pitch</label>
-            <input placeholder="Pitch" id="first_name" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleTextInputChange}/>
-          <div className="row center-align no-margin">
-            <img src='./icons/noun_wave_1985513.svg' height="30px" width="30px"/>
-          </div>
-
-        
-          {/* <div id="test-slider"></div> */}
-          {/* <Nouislider range={{ min: 0, max: 100 }} start={[20, 80]} connect /> */}
-          <div className="row center-align no-margin">
-            <p className="range-field">
-              <input className={this.state.thumbClasses} type="range" min="0" max="11" step="1" value={this.state.rangeValue} onChange={this.handleRangeChange} onMouseDown={this.handleMouseUpDown} onMouseUp={this.handleMouseUpDown}/>
-              {/* <span className={"thumb " + this.state.thumbClasses} style={{visibility: this.state.bubbleVisibility}}>
-                <span className="value">hehe{this.state.rangeValue}</span> 
-              </span> */}
-            </p>
-          </div>
-
-          <div className="row center-align no-margin">
-            <img src='./icons/noun_waves_2767962.svg' height="30px" width="30px"/>
-          </div>
-        </div>
+      <div style={{width:'500px', backgroundColor:'black', height:'100px', color:'white'}}>
+        <input placeholder="Pitch" id="first_name" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleTextInputChange}/>
       </div>
     );
   }

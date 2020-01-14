@@ -15,9 +15,17 @@
 }
 
 .card--content {
-  background-color: #e74c3c;
-  min-width: 200px;
-  margin: 3px;
+  background-color: yellow;
+  /* background-color: #e74c3c; */
+  /* min-width: 200px; */
+  width: 120px;
+  margin: 0px;
+}
+
+.card-content-pause {
+  background-color: darkslategrey;
+  width: 45px;
+  margin: 0px;
 }
 
 .param-chart::-webkit-scrollbar {
@@ -41,4 +49,14 @@
 .checkbox-green[type="checkbox"].filled-in:checked + span:not(.lever):after {
   border: 2px solid green;
   background-color: green;
+}
+
+@media only screen and (min-width: 993px) {
+  .container {
+    width: 85%;
+  }
+}
+
+.pause-panel {
+  cursor: e-resize;
 }

@@ -12,6 +12,10 @@ import TextBox from './TextBox.js';
 import Doc from '../text_editor/Doc.js';
 import {keys} from '../text_editor/Const.js';
 import VerticalRangeSlider from './reusable/VerticalRangeSlider.js'
+import {pitch, pause, volume, speed, 
+  pitchInitial, pauseInitial, volumeInitial, speedInitial, 
+  pitchMin, pauseMin, volumeMin, speedMin, 
+  pitchMax, pauseMax, volumeMax, speedMax} from '../text_editor/Const.js'
 
 
 export default class Happiness extends Component {
@@ -271,10 +275,15 @@ export default class Happiness extends Component {
     // start at 1 so that DummyWord does not get loaded
     for (let i=1; i<this.state.doc.wordList.size(); i+=1) {
       divArr.push(
-        <ParamViewPanel 
-          index={i}
-          node={this.state.doc.wordList.elementAtIndex(i)}
-          onChange={this.handleWordParamChange} />
+        <PausePanel index={i} onChange={this.handleWordParamChange}/>
+      );
+      divArr.push(
+        // <ParamViewPanel 
+        //   index={i}
+        //   node={this.state.doc.wordList.elementAtIndex(i)}
+        //   onChange={this.handleWordParamChange} />
+        // <PausePanel />
+        <WordPanel index={i} onChange={this.handleWordParamChange} node={this.state.doc.wordList.elementAtIndex(i)}/>
       );
     }
     return divArr;
@@ -722,33 +731,69 @@ class WordPanel extends Component {
   render() {
     return(
       <div className="card--content">
-        <div className="row">
+        <div className="row" style={{ height: "85%"}}>
           <div className="col s6">
             <VerticalRangeSlider 
-              name="Pitch"
-              min="50"
-              max="200"
+              name={pitch}
+              min={pitchMin}
+              max={pitchMax}
               step="1"
-              initialValue="100"
+              initialValue={pitchInitial}
               iconTop="./icons/noun_wave_1985513.svg"
               iconBottom="./icons/noun_waves_2767962.svg"
+              onChange={this.props.onChange}
+              index={this.props.index}
             />
           </div>
           <div className="col s6">
             <VerticalRangeSlider 
-              name="Volume"
-              min="50"
-              max="200"
+              name={volume}
+              min={volumeMin}
+              max={volumeMax}
               step="1"
-              initialValue="100"
-              iconTop="./icons/noun_wave_1985513.svg"
-              iconBottom="./icons/noun_waves_2767962.svg"
+              initialValue={volumeInitial}
+              iconTop="./icons/volume_up-24px.svg"
+              iconBottom="./icons/volume_down-24px.svg"
+              onChange={this.props.onChange}
+              index={this.props.index}
             />
           </div>
         </div>
-        <div className="row">
+        <div
+          className="center-align"
+          style={{ height: "10%", backgroundColor: "grey", padding: '5px'}}
+        >
+          {/* {this.props.node.word.trim()} */}
+          <font color="white">{this.props.node.word.trim()}</font>
+        </div>
+      </div>
+    );
+  }
+}
 
-        </div>
+class PausePanel extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return(
+      <div className="card-content-pause">
+        <div className="row" style={{ height: "85%"}}>
+          
+            <VerticalRangeSlider 
+              name={pause}
+              min={pauseMin}
+              max={pauseMax}
+              step="1"
+              initialValue={pauseInitial}
+              // iconTop="./icons/noun_wave_1985513.svg"
+              // iconBottom="./icons/noun_waves_2767962.svg"
+              onChange={this.props.onChange}
+              index={this.props.index}
+            />
+          
+         </div>
       </div>
     );
   }

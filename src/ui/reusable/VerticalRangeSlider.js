@@ -12,6 +12,8 @@ import '../css/range.css'
  * @argument {Number} props.step
  * @argument {String} props.iconTop
  * @argument {String} props.iconBottom
+ * @argument {object} props.onChange
+ * @argument {Number} props.index
  * 
  */
 export default class VerticalRangeSlider extends Component {
@@ -26,22 +28,21 @@ export default class VerticalRangeSlider extends Component {
     this.setState({
       rangeValue: e.target.value
     });
-  }
-
-  handleTextInputChange = (e) => {
-    this.setState({
-      rangeValue: e.target.value
-    });
+    this.props.onChange(this.props.name, e.target.value, this.props.index);
   }
 
   render() {
     return(
       <div className="row">
         <div className="col s12">
-            <label for="input_area">{this.props.name}</label>
-            <input placeholder={this.props.name} id="input_area" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleRangeChange}/>
           <div className="row center-align no-margin">
-            <img src={this.props.iconTop} height="30px" width="30px"/>
+            <label for="input_area">{this.props.name}</label>
+          </div>
+          <div className="row center-align no-margin">
+            <input placeholder={this.props.name} style={{width:'50%'}} id="input_area" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleRangeChange}/>
+          </div>
+          <div className="row center-align no-margin">
+            <img src={this.props.iconTop} height="20px" width="20px"/>
           </div>
 
           <div className="row center-align no-margin">
@@ -51,7 +52,7 @@ export default class VerticalRangeSlider extends Component {
           </div>
 
           <div className="row center-align no-margin">
-            <img src={this.props.iconBottom} height="30px" width="30px"/>
+            <img src={this.props.iconBottom} height="20px" width="20px"/>
           </div>
         </div>
       </div>

@@ -99,7 +99,7 @@ export default class Word {
     this.speechParamChangeIndex += 1;
 
     // update actual current speech params
-    this.speechParam.paramName = paramValue;
+    this.speechParam[paramName] = paramValue;
   }
 
   updateDeletedNodesPointer = (node) => {
