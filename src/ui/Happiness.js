@@ -713,3 +713,43 @@ class ParamViewPanel extends Component {
     );
   }
 }
+
+class WordPanel extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return(
+      <div className="card--content">
+        <div className="row">
+          <div className="col s6">
+            <VerticalRangeSlider 
+              name="Pitch"
+              min="50"
+              max="200"
+              step="1"
+              initialValue="100"
+              iconTop="./icons/noun_wave_1985513.svg"
+              iconBottom="./icons/noun_waves_2767962.svg"
+            />
+          </div>
+          <div className="col s6">
+            <VerticalRangeSlider 
+              name="Volume"
+              min="50"
+              max="200"
+              step="1"
+              initialValue="100"
+              iconTop="./icons/noun_wave_1985513.svg"
+              iconBottom="./icons/noun_waves_2767962.svg"
+            />
+          </div>
+        </div>
+        <div className="row">
+
+        </div>
+      </div>
+    );
+  }
+}
