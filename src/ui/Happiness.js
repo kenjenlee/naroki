@@ -11,6 +11,8 @@ import * as NaoConsts from "../NaoConst.js";
 import TextBox from './TextBox.js';
 import Doc from '../text_editor/Doc.js';
 import {keys} from '../text_editor/Const.js';
+import VerticalRangeSlider from './reusable/VerticalRangeSlider.js'
+
 
 export default class Happiness extends Component {
   constructor(props) {
@@ -446,6 +448,11 @@ export default class Happiness extends Component {
               <h6>Some buttons</h6>
             </div>
           </div>
+        </div>
+        <div className="footer-copyright">
+          {/* <div className="container"> */}
+            Icons: waves by Olga from the Noun Project, wave by Olivia from the Noun Project
+          {/* </div> */}
         </div>
       </div>
     );
