@@ -1,6 +1,10 @@
 // NOTE any symbols like , and . might have a default pause associated
 // with it in the Nuance package, but is still stated as 0 here.
 import buckets from 'buckets-js';
+import {pitch, pause, volume, speed, 
+  pitchInitial, pauseInitial, volumeInitial, speedInitial, 
+  pitchMin, pauseMin, volumeMin, speedMin, 
+  pitchMax, pauseMax, volumeMax, speedMax} from '../text_editor/Const.js'
 
 
 export default class Word {
@@ -99,7 +103,14 @@ export default class Word {
     this.speechParamChangeIndex += 1;
 
     // update actual current speech params
-    this.speechParam[paramName] = paramValue;
+    this.speechParam.params[paramName] = paramValue;
+  }
+
+  resetAllSpeechParams = () => {
+    this.speechParam.resetDefault(pitch);
+    this.speechParam.resetDefault(volume);
+    this.speechParam.resetDefault(pause);
+    this.speechParam.resetDefault(speed);
   }
 
   updateDeletedNodesPointer = (node) => {
@@ -158,7 +169,7 @@ export class DummyWord extends Word {
   }
 
   updateSpeechParam = (paramName, paramValue) => {
-    if(paramName != 'pause') {
+    if(paramName != pause) {
       throw Error('DummyWord can only have a pause speech parameter.');
     }
     this.addChangeType('p');
@@ -171,7 +182,7 @@ export class DummyWord extends Word {
     this.speechParamChangeIndex += 1;
 
     // update actual current speech params
-    this.speechParam.paramName = paramValue;
+    this.speechParam.params[paramName] = paramValue;
   }
 }
 
@@ -190,11 +201,36 @@ class WordChange {
 }
 
 class SpeechParam {
-  constructor(pitch=100, speed=1, pause=0) {
+  constructor(pitchVal=pitchInitial, speedVal=speedInitial, pauseVal=pauseInitial, volumeVal=volumeInitial) {
     // pause is after the word associated with this set of param
-    this.pitch = pitch;
-    this.speed = speed;
-    this.pause = pause;
+    this.params = {};
+    this.params[pitch] = pitchVal;
+    this.params[speed] = speedVal;
+    this.params[pause] = pauseVal;
+    this.params[volume] = volumeVal;
+  }
+
+  resetDefault = (paramName) => {
+    let paramValue = null;
+    switch(paramName) {
+      case pitch:
+        paramValue = pitchInitial;
+        break;
+      case volume:
+        paramValue = volumeInitial;
+        break;
+      case pause:
+        paramValue = pauseInitial;
+        break;
+      case speed:
+        paramValue = speedInitial;
+        break;
+      default:
+        console.log('Wrong paramName value given');
+        break;
+    }
+    if(paramValue === null) return; // paramName not valid
+    this.params[paramName] = paramValue;
   }
 }
 

@@ -14,21 +14,28 @@ import '../css/range.css'
  * @argument {String} props.iconBottom
  * @argument {object} props.onChange
  * @argument {Number} props.index
+ * @argument {String} props.unit unit to append to end of text input field
  * 
  */
 export default class VerticalRangeSlider extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      rangeValue: this.props.initialValue,
+      rangeValue: 0
+    };
+  }
+
+  static getDerivedStateFromProps(nextProp, prevState) {
+    return {
+      rangeValue: nextProp.initialValue
     };
   }
 
   handleRangeChange = (e) => {
     this.setState({
-      rangeValue: e.target.value
+      rangeValue: Number(e.target.value)
     });
-    this.props.onChange(this.props.name, e.target.value, this.props.index);
+    this.props.onChange(this.props.name, Number(e.target.value), this.props.index);
   }
 
   render() {
@@ -39,7 +46,10 @@ export default class VerticalRangeSlider extends Component {
             <label for="input_area">{this.props.name}</label>
           </div>
           <div className="row center-align no-margin">
-            <input placeholder={this.props.name} style={{width:'50%'}} id="input_area" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleRangeChange}/>
+            <div class="input-field inline">
+              <input placeholder={this.props.name} style={{width:'50%'}} id="input_area" type="text" class="validate" value={this.state.rangeValue} onChange={this.handleRangeChange}/>
+            </div>
+            {this.props.units ? this.props.units : ''}
           </div>
           <div className="row center-align no-margin">
             <img src={this.props.iconTop} height="20px" width="20px"/>

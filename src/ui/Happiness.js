@@ -16,6 +16,7 @@ import {pitch, pause, volume, speed,
   pitchInitial, pauseInitial, volumeInitial, speedInitial, 
   pitchMin, pauseMin, volumeMin, speedMin, 
   pitchMax, pauseMax, volumeMax, speedMax} from '../text_editor/Const.js'
+import Modal from './reusable/Modal.js'
 
 
 export default class Happiness extends Component {
@@ -29,10 +30,23 @@ export default class Happiness extends Component {
       rawInput: "",
       prevKey: '',
       reundo: false,
+      immediateFeedback: false,
+      callGoAfterUpdate: false,
+      multiEditMode: false,
+      forceEqualValue: false
     };
-    
-
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    if(this.state.callGoAfterUpdate) {
+      this.handleGoButtonClick();
+      this.setState({
+        callGoAfterUpdate: false
+      });
+    }
+  }
+
+  //// TEXT EDITOR RELATED CODE
 
   // TODO Inefficient code here called redundantly by both keyup and mouseup
   checkTextIsHighlighted = () => {
@@ -163,6 +177,8 @@ export default class Happiness extends Component {
     
   }
 
+  //// REST OF THE UI
+
   componentDidMount() {
     // Auto initialize all the things!
     M.AutoInit();
@@ -175,30 +191,47 @@ export default class Happiness extends Component {
     M.Dropdown.init(dropdowns, options);
   }
 
-  // /**
-  //  * @function handleCheckboxChange
-  //  * Handles any check/uncheck events in the checkboxes
-  //  */
-  // handleCheckboxChange = (event) => {
-  //   var temp = this.state.paramViewSelected;
-  //   temp[event.target.name] = event.target.checked;
-  //   this.setState({
-  //     paramViewSelected: temp
-  //   });
-  //   // console.log(this.state.paramViewSelected);
-  // }
+  /**
+   * @function handleCheckboxChange
+   * Handles any check/uncheck events in the checkboxes
+   */
+  handleCheckboxChange = (event) => {
+    this.setState({
+      [event.target.name]: event.target.value
+    });
+    // console.log(this.state.paramViewSelected);
+  }
 
   /**
    * @function formSpeechString
    * Formats the string to include the pitch settings
    */
   formSpeechString = () => {
-    var speech = "";
-    for (let i = 0; i < this.state.numWords; i++) {
+    var speech = "\\pau=" + this.state.doc.wordList.elementAtIndex(0).speechParam.params[pause] + "\\";
+
+    for (let i=1; i<this.state.doc.wordList.size(); i+=1) {
+      let word = this.state.doc.wordList.elementAtIndex(i);
       speech = speech.concat(
-        " \\vct=" + this.state.pitches[i] + "\\" + this.state.words[i]
+        " \\vct=" + word.speechParam.params[pitch] + "\\" 
+        + "\\rspd=" + word.speechParam.params[speed] + "\\"
+        + "\\vol=" + word.speechParam.params[volume] + "\\"
+        + word.word
+        + "\\pau=" + word.speechParam.params[pause] + "\\"
       );
     }
+
+    speech = speech.concat(
+      " \\vct=" + pitchInitial + "\\" 
+      + "\\rspd=" + speedInitial + "\\"
+      + "\\vol=" + volumeInitial + "\\"
+      + "\\pau=" + pauseInitial + "\\"
+    );
+
+    // for (let i = 0; i < this.state.numWords; i++) {
+    //   speech = speech.concat(
+    //     " \\vct=" + this.state.pitches[i] + "\\" + this.state.words[i]
+    //   );
+    // }
     return speech;
   }
 
@@ -259,31 +292,18 @@ export default class Happiness extends Component {
    */
   createParamViewPanels = () => {
     let divArr = [];
-    // let numWords = this.state.words.length;
-    // for (let i = 0; i < numWords; i++) {
-    //   console.log("here");
-    //   divArr.push(
-    //     <ParamViewPanel
-    //       index={i}
-    //       word={this.state.words[i]}
-    //       handleParamChange={this.handleWordParamChange}
-    //       {...this.state}
-    //     />
-    //   );
-    // }
-
+    if(this.state.doc.wordList.size() > 1) {
+      divArr.push(
+        <PausePanel index={0} onChange={this.handleWordParamChange} pauseDuration={this.state.doc.wordList.elementAtIndex(0).speechParam.params[pause]}/>
+      );
+    }
     // start at 1 so that DummyWord does not get loaded
     for (let i=1; i<this.state.doc.wordList.size(); i+=1) {
       divArr.push(
-        <PausePanel index={i} onChange={this.handleWordParamChange}/>
+        <WordPanel index={i} onChange={this.handleWordParamChange} node={this.state.doc.wordList.elementAtIndex(i)}/>
       );
       divArr.push(
-        // <ParamViewPanel 
-        //   index={i}
-        //   node={this.state.doc.wordList.elementAtIndex(i)}
-        //   onChange={this.handleWordParamChange} />
-        // <PausePanel />
-        <WordPanel index={i} onChange={this.handleWordParamChange} node={this.state.doc.wordList.elementAtIndex(i)}/>
+        <PausePanel index={i} onChange={this.handleWordParamChange} pauseDuration={this.state.doc.wordList.elementAtIndex(i).speechParam.params[pause]}/>
       );
     }
     return divArr;
@@ -292,12 +312,30 @@ export default class Happiness extends Component {
   handleWordParamChange = (paramName, paramValue, index) => {
     let newDoc = this.state.doc;
     newDoc.wordList.elementAtIndex(index).updateSpeechParam(paramName, paramValue);
+    
     this.setState({doc:newDoc});
+    if(this.state.immediateFeedback) {
+      // TODO only say word(s) edited
+      this.setState({
+        callGoAfterUpdate: true
+      });
+    }
+  }
+
+  handleClickReset = () => {
+    let newDoc = this.state.doc;
+    newDoc.resetAllSpeechParams();
+    this.setState({
+      doc: newDoc,
+    });
   }
 
   render() {
     return (
       <div>
+        <header>
+          <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"></link>
+        </header>
         <Menu />
         <div class="row">
           <div class="col s3">
@@ -418,49 +456,100 @@ export default class Happiness extends Component {
                 {this.createParamViewPanels()}
               </div>
               <div class="col s2">
-                  <p>
-                    <label>
-                      <input
-                        type="checkbox"
-                        class="filled-in checkbox-orange"
-                        onChange={this.handleCheckboxChange}
-                        name="pitch"
-                      />
-                      <span>Pitch</span>
-                    </label>
-                  </p>
-                  <p>
-                    <label>
-                      <input
-                        type="checkbox"
-                        class="filled-in checkbox-purple"
-                        onChange={this.handleCheckboxChange}
-                        name="speed"
-                      />
-                      <span>Speed</span>
-                    </label>
-                  </p>
-                  <p>
-                    <label>
-                      <input
-                        type="checkbox"
-                        class="filled-in checkbox-green"
-                        onChange={this.handleCheckboxChange}
-                        name="pauses"
-                      />
-                      <span>Pauses</span>
-                    </label>
-                  </p>
+                <p>
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="filled-in checkbox-red"
+                      onChange={this.handleCheckboxChange}
+                      name="immediateFeedback"
+                    />
+                    <span>Immediate Feedback</span>
+                  </label>
+                </p>
+                <p>
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="filled-in checkbox-red"
+                      onChange={this.handleCheckboxChange}
+                      name="multiEditMode"
+                    />
+                    <span>Multi-Edit Mode</span>
+                  </label>
+                </p>
+                <p>
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="filled-in checkbox-red"
+                      onChange={this.handleCheckboxChange}
+                      name="forceEqualValue"
+                      disabled={this.state.multiEditMode?"":"disabled"}
+                    />
+                    <span>Force Equal Value</span>
+                  </label>
+                </p>
+                <p>
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="filled-in checkbox-orange"
+                      onChange={this.handleCheckboxChange}
+                      name="pitch"
+                    />
+                    <span>Pitch</span>
+                  </label>
+                </p>
+                <p>
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="filled-in checkbox-purple"
+                      onChange={this.handleCheckboxChange}
+                      name="speed"
+                    />
+                    <span>Speed</span>
+                  </label>
+                </p>
+                <p>
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="filled-in checkbox-green"
+                      onChange={this.handleCheckboxChange}
+                      name="pauses"
+                    />
+                    <span>Pauses</span>
+                  </label>
+                </p>
               </div>
             </div>
-            <div class="row" style={{ backgroundColor: "pink", marginRight: "3vw"}}>
-              <h6>Some buttons</h6>
+            <div class="row" style={{ backgroundColor: "pink", marginRight: "3vw"}}>              
+              {/* <div className="col s2"> */}
+                <a class="btn waves-effect waves-light" 
+                  href={"data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.formSpeechString()))} 
+                  download='speech.json'
+                  name="saveAsButton">Save As
+                  <i class="material-icons right">save</i>
+                </a>
+              {/* </div> */}
+              {/* <div className="col s2"> */}
+                <Modal modalText={['Reset ', <i class="material-icons right">refresh</i>]} headerText="Are you sure?" 
+                  contentText=" All speech parameters of all words will be reset to their default. You will not be able to undo this reset. We recommend you save a copy before proceeding to reset."
+                  handleConfirmClick={this.handleClickReset}/>
+                {/* <a class="btn waves-effect waves-light" 
+                  onClick={this.handleClickReset}
+                  name="resetButton">Reset
+                  <i class="material-icons right">refresh</i>
+                </a> */}
+              {/* </div> */}
             </div>
           </div>
         </div>
-        <div className="footer-copyright">
+        <div className="footer-copyright teal accent-4" style={{fontSize:'10px', paddingLeft:'5px', color:'white'}}>
           {/* <div className="container"> */}
-            Icons: waves by Olga from the Noun Project, wave by Olivia from the Noun Project
+            Icons: waves by Olga from the Noun Project, wave by Olivia from the Noun Project, Material Icons
           {/* </div> */}
         </div>
       </div>
@@ -732,36 +821,54 @@ class WordPanel extends Component {
     return(
       <div className="card--content">
         <div className="row" style={{ height: "85%"}}>
-          <div className="col s6">
+          <div className="col s4">
             <VerticalRangeSlider 
               name={pitch}
               min={pitchMin}
               max={pitchMax}
               step="1"
-              initialValue={pitchInitial}
+              initialValue={this.props.node.speechParam.params[pitch]}
               iconTop="./icons/noun_wave_1985513.svg"
               iconBottom="./icons/noun_waves_2767962.svg"
               onChange={this.props.onChange}
               index={this.props.index}
+              units='%'
             />
           </div>
-          <div className="col s6">
+          <div className="col s4">
             <VerticalRangeSlider 
               name={volume}
               min={volumeMin}
               max={volumeMax}
               step="1"
-              initialValue={volumeInitial}
+              initialValue={this.props.node.speechParam.params[volume]}
               iconTop="./icons/volume_up-24px.svg"
               iconBottom="./icons/volume_down-24px.svg"
               onChange={this.props.onChange}
               index={this.props.index}
+              units='%'
+            />
+          </div>
+          <div className="col s4">
+            <VerticalRangeSlider 
+              name={speed}
+              min={speedMin}
+              max={speedMax}
+              step="1"
+              initialValue={this.props.node.speechParam.params[speed]}
+              iconTop="./icons/fast_forward-24px.svg"
+              iconBottom="./icons/play_arrow-24px.svg"
+              onChange={this.props.onChange}
+              index={this.props.index}
+              units='%'
             />
           </div>
         </div>
+        
         <div
           className="center-align"
-          style={{ height: "10%", backgroundColor: "grey", padding: '5px'}}
+          // style={{ height: "10%", backgroundColor: "grey", padding: '5px'}}
+          style={{ height: "10%", padding: '5px'}}
         >
           {/* {this.props.node.word.trim()} */}
           <font color="white">{this.props.node.word.trim()}</font>
@@ -780,19 +887,18 @@ class PausePanel extends Component {
     return(
       <div className="card-content-pause">
         <div className="row" style={{ height: "85%"}}>
-          
-            <VerticalRangeSlider 
-              name={pause}
-              min={pauseMin}
-              max={pauseMax}
-              step="1"
-              initialValue={pauseInitial}
-              // iconTop="./icons/noun_wave_1985513.svg"
-              // iconBottom="./icons/noun_waves_2767962.svg"
-              onChange={this.props.onChange}
-              index={this.props.index}
-            />
-          
+          <VerticalRangeSlider 
+            name={pause}
+            min={pauseMin}
+            max={pauseMax}
+            step="1"
+            initialValue={this.props.pauseDuration}
+            iconTop="./icons/stop-24px.svg"
+            iconBottom="./icons/pause-24px.svg"
+            units='ms'
+            onChange={this.props.onChange}
+            index={this.props.index}
+          />
          </div>
       </div>
     );

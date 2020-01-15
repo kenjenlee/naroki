@@ -204,6 +204,12 @@ export default class Doc {
    */
   updateHighlightedSpeechParam = (forcedEqualValue = false) => {};
 
+  resetAllSpeechParams = () => {
+    this.wordList.forEach(word => {
+      word.resetAllSpeechParams();
+    });
+  }
+
   // TODO deal with different whitespace
   getString = () => {
     let str = "",

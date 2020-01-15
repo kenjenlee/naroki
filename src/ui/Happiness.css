@@ -18,12 +18,12 @@
   background-color: yellow;
   /* background-color: #e74c3c; */
   /* min-width: 200px; */
-  width: 120px;
+  width: 150px;
   margin: 0px;
 }
 
 .card-content-pause {
-  background-color: darkslategrey;
+  background-color: lightpink;
   width: 45px;
   margin: 0px;
 }
@@ -49,6 +49,11 @@
 .checkbox-green[type="checkbox"].filled-in:checked + span:not(.lever):after {
   border: 2px solid green;
   background-color: green;
+}
+
+.checkbox-red[type="checkbox"].filled-in:checked + span:not(.lever):after {
+  border: 2px solid #ff3d00;
+  background-color: #ff3d00;
 }
 
 @media only screen and (min-width: 993px) {
