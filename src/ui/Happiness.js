@@ -33,7 +33,8 @@ export default class Happiness extends Component {
       immediateFeedback: false,
       callGoAfterUpdate: false,
       multiEditMode: false,
-      forceEqualValue: false
+      forceEqualValue: false,
+      forceTextBoxText: null
     };
   }
 
@@ -42,6 +43,11 @@ export default class Happiness extends Component {
       this.handleGoButtonClick();
       this.setState({
         callGoAfterUpdate: false
+      });
+    }
+    if(this.state.forceTextBoxText) {
+      this.setState({
+        forceTextBoxText: null
       });
     }
   }
@@ -382,9 +388,9 @@ export default class Happiness extends Component {
     }
 
     newDoc.wordList.removeElementAtIndex(latestInd-1);
-
     this.setState({
-      doc: newDoc
+      doc: newDoc,
+      forceTextBoxText: newDoc.getString()
     });
     // newDoc.wordList.elementAtIndex(0)
   }
@@ -505,7 +511,7 @@ export default class Happiness extends Component {
                     </div>
                   </div>
                 </form> */}
-                <TextBox handleKeyDown={this.handleKeyDown} handleKeyMouseUp={this.handleKeyMouseUp}/>
+                <TextBox handleKeyDown={this.handleKeyDown} handleKeyMouseUp={this.handleKeyMouseUp} forceText={this.state.forceTextBoxText}/>
               </div>
               <div class="col s3 valign-wrapper">
                 <a

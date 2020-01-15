@@ -206,6 +206,6 @@ export default class Doc {
     // remove leading and tailing space
     // return str.trim();
     console.log(this.wordList.size());
-    return str.replace(/\s/g, "X");
+    return str;//str.replace(/\s/g, "X");
   };
 }
