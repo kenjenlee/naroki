@@ -106,27 +106,10 @@ export default class Doc {
     }
   };
 
-  deleteText = (offset, length) => {
-    // let offsetSum = 0,
-    //   nodeIndex = 1,
-    //   lastOffsetSum = 0;
-    // while (offsetSum < offset) {
-    //   // console.log(lastOffsetSum);
-    //   // console.log(nodeIndex);
-    //   // console.log('get length');
-    //   // console.log(this.wordList.elementAtIndex(nodeIndex).getLength());
-    //   let node = this.wordList.elementAtIndex(nodeIndex);
-    //   offsetSum += node.getLength();
-    //   // console.log(offsetSum);
-    //   if (
-    //     offsetSum < offset ||
-    //     (offsetSum == offset && node.trailingWhitespace)
-    //   ) {
-    //     lastOffsetSum = offsetSum;
-    //     nodeIndex += 1;
-    //   }
-    // }
-  };
+  addWord = (text) => {
+    let newNode = new Word(text);
+    this.wordList.add(newNode, this.wordList.size());
+  }
 
   /**
    * @function deleteChar delete a single character from the doc

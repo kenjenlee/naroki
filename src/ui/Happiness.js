@@ -330,6 +330,73 @@ export default class Happiness extends Component {
     });
   }
 
+  processImport = (result) => {
+    let str = result.slice(1,-1);
+    console.log(str);
+    let newDoc = new Doc();
+    str = str.slice(6);
+    let pauseVal = str.slice(0, str.indexOf("\\"));
+    str = str.slice(str.indexOf("\\")+2);
+    console.log(str);
+    newDoc.wordList.elementAtIndex(0).updateSpeechParam(pause, pauseVal);
+    let pitchVal, speedVal, volumeVal, word;
+    let latestInd = 1;
+
+    while(str.indexOf('\\')>-1) {
+      // remove leading whitespace
+      str = str.slice(str.indexOf('\\')+6);
+      let ind = str.indexOf('\\');
+      pitchVal = Number(str.slice(0, ind));
+      str = str.slice(ind+9); // remove everything till speed val
+
+      ind = str.indexOf('\\');
+      speedVal = Number(str.slice(0, ind));
+      str = str.slice(ind+8);
+      
+      ind = str.indexOf('\\');
+      volumeVal = Number(str.slice(0, ind));
+      str = str.slice(ind+2);
+
+      ind = str.indexOf('\\');
+      word = str.slice(0, ind);
+      str = str.slice(ind+6);
+
+      ind = str.indexOf('\\');
+      pauseVal = Number(str.slice(0, ind));
+      str = str.slice(ind+2);
+
+      newDoc.addWord(word);
+      let node = newDoc.wordList.elementAtIndex(latestInd);
+      node.updateSpeechParam(pitch, pitchVal);
+      node.updateSpeechParam(speed, speedVal);
+      node.updateSpeechParam(volume, volumeVal);
+      node.updateSpeechParam(pause, pauseVal);
+
+      console.log(pitchVal);
+      console.log(speedVal);
+      console.log(volumeVal);
+      console.log(word);
+      console.log(pauseVal);
+      console.log(str);
+      latestInd+=1;
+    }
+
+    newDoc.wordList.removeElementAtIndex(latestInd-1);
+
+    this.setState({
+      doc: newDoc
+    });
+    // newDoc.wordList.elementAtIndex(0)
+  }
+
+  handleImport = () => {
+    let fileReader = new FileReader();
+    fileReader.readAsText(document.getElementById('importButton').files.item(0));
+    fileReader.onloadend = () => {
+      this.processImport(fileReader.result);
+    };
+  }
+
   render() {
     return (
       <div>
@@ -526,24 +593,19 @@ export default class Happiness extends Component {
               </div>
             </div>
             <div class="row" style={{ backgroundColor: "pink", marginRight: "3vw"}}>              
-              {/* <div className="col s2"> */}
                 <a class="btn waves-effect waves-light" 
                   href={"data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.formSpeechString()))} 
                   download='speech.json'
                   name="saveAsButton">Save As
                   <i class="material-icons right">save</i>
                 </a>
-              {/* </div> */}
-              {/* <div className="col s2"> */}
                 <Modal modalText={['Reset ', <i class="material-icons right">refresh</i>]} headerText="Are you sure?" 
                   contentText=" All speech parameters of all words will be reset to their default. You will not be able to undo this reset. We recommend you save a copy before proceeding to reset."
                   handleConfirmClick={this.handleClickReset}/>
-                {/* <a class="btn waves-effect waves-light" 
-                  onClick={this.handleClickReset}
-                  name="resetButton">Reset
-                  <i class="material-icons right">refresh</i>
-                </a> */}
-              {/* </div> */}
+                <span class="btn btn-file waves-effect waves-light">
+                  Import<input type="file" accept=".json" id="importButton" onChange={this.handleImport} load/>
+                  <i class="material-icons right">open_in_browser</i>
+                </span>
             </div>
           </div>
         </div>
